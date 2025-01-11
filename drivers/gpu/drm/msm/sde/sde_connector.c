@@ -805,6 +805,28 @@ int sde_connector_clk_ctrl(struct drm_connector *connector, bool enable)
 	return rc;
 }
 
+bool sde_connector_mode_needs_full_range(struct drm_connector *connector)
+{
+	struct sde_connector *c_conn;
+
+	if (!connector) {
+		SDE_ERROR("invalid argument\n");
+		return false;
+	}
+
+	c_conn = to_sde_connector(connector);
+
+	if (!c_conn->display) {
+		SDE_ERROR("invalid argument\n");
+		return false;
+	}
+
+	if (!c_conn->ops.mode_needs_full_range)
+		return false;
+
+	return c_conn->ops.mode_needs_full_range(c_conn->display);
+}
+
 #ifdef CONFIG_SHARP_DRM_HR_VID /* CUST_ID_00015 */
 void sde_connector_clk_ctrl_mfr(struct drm_connector *connector, bool enable,
 					int islink)
