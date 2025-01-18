@@ -29,6 +29,7 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/exception.h>
 #include <soc/qcom/minidump.h>
+#include <linux/panic_logstore.h>
 
 #define PANIC_TIMER_STEP 100
 #define PANIC_BLINK_SPD 18
@@ -186,6 +187,19 @@ void panic(const char *fmt, ...)
 	if (!test_taint(TAINT_DIE) && oops_in_progress <= 1)
 		dump_stack();
 #endif
+
+	/**
+	 * Dump the log before forcibly shutting down other CPUs because the
+	 * related interrupts (e.g. UFS controller) could be running on them.
+	 * We have no chance to migrate them in this critical context. Simply
+	 * dump the log here although it doesn't give full information, but
+	 * it's useful enough.
+	 */
+	local_irq_enable();
+	do_logstore();
+	mdelay(1000);
+	local_irq_disable();
+
 
 	/*
 	 * If we have crashed and we have a crash kernel loaded let it handle
