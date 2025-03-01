@@ -98,9 +98,6 @@ struct cxd224x_dev {
 #ifndef CONFIG_NFC_CXD224X_RST_USE_PMIC
 	struct pinctrl_state	*pin_default_rst;
 #endif
-	/* read buffer */
-	size_t kbuflen;
-	void *kbuf;
 };
 
 #if defined(CONFIG_NFC_CXD224X_RST) || defined(CONFIG_NFC_CXD224X_RST_MODULE)
@@ -252,19 +249,17 @@ static ssize_t cxd224x_dev_read(struct file *filp, char __user *buf,
 				  size_t count, loff_t *offset)
 {
 	struct cxd224x_dev *cxd224x_dev = filp->private_data;
-	unsigned char *tmp = NULL;
+	unsigned char tmp[MAX_BUFFER_SIZE];
 	int total, len, ret;
 
 	total = 0;
 	len = 0;
 
-	if (count > cxd224x_dev->kbuflen)
-		count = cxd224x_dev->kbuflen;
+	if (count > MAX_BUFFER_SIZE)
+		count = MAX_BUFFER_SIZE;
 
 	mutex_lock(&cxd224x_dev->read_mutex);
 
-	tmp = (unsigned char *)cxd224x_dev->kbuf;
-	memset(tmp, 0x00, count);
 	ret = i2c_master_recv(cxd224x_dev->client, tmp, PACKET_HEADER_SIZE_NCI);
 	if (ret != PACKET_HEADER_SIZE_NCI) {
 		DBGLOG_ERR("failed to read header %d\n", ret);
@@ -309,7 +304,7 @@ static ssize_t cxd224x_dev_write(struct file *filp, const char __user *buf,
 				   size_t count, loff_t *offset)
 {
 	struct cxd224x_dev *cxd224x_dev = filp->private_data;
-	char *tmp;
+	char tmp[MAX_BUFFER_SIZE];
 	int ret;
 
 	if (count > MAX_BUFFER_SIZE) {
@@ -317,8 +312,7 @@ static ssize_t cxd224x_dev_write(struct file *filp, const char __user *buf,
 		return -ENOMEM;
 	}
 
-	tmp = memdup_user(buf, count);
-	if (IS_ERR(tmp)) {
+	if (copy_from_user(tmp, buf, count)) {
 		DBGLOG_ERR("failed to copy from user space\n");
 		return -EFAULT;
 	}
@@ -335,7 +329,7 @@ static ssize_t cxd224x_dev_write(struct file *filp, const char __user *buf,
 		ret = -EIO;
 	}
 	mutex_unlock(&cxd224x_dev->read_mutex);
-	kfree(tmp);
+
 	return ret;
 }
 
@@ -704,15 +698,6 @@ static int cxd224x_probe(struct i2c_client *client,
 		goto err_exit;
 	}
 
-	cxd224x_dev->kbuflen = MAX_BUFFER_SIZE;
-	cxd224x_dev->kbuf = kzalloc(MAX_BUFFER_SIZE, GFP_KERNEL);
-	if (!cxd224x_dev->kbuf) {
-		dev_err(&client->dev,
-			"failed to allocate memory for read data\n");
-		ret = -ENOMEM;
-		goto err_alloc_kbuf;
-	}
-
 	cxd224x_dev->irq_gpio = platform_data->irq_gpio;
 #if defined(CONFIG_NFC_CXD224X_VEN) || defined(CONFIG_NFC_CXD224X_VEN_MODULE)
 	cxd224x_dev->en_gpio = platform_data->en_gpio;
@@ -742,7 +727,7 @@ static int cxd224x_probe(struct i2c_client *client,
 #if defined(CONFIG_NFC_CXD224X_RST) || defined(CONFIG_NFC_CXD224X_RST_MODULE)
 	if (init_wqueue(cxd224x_dev) != 0) {
 		DBGLOG_ERR("init workqueue failed\n");
-		goto err_misc_register;
+		goto err_exit;
 	}
 #endif
 
@@ -783,10 +768,6 @@ err_request_irq_failed:
 	misc_deregister(&cxd224x_dev->cxd224x_device);
 err_misc_register:
 	mutex_destroy(&cxd224x_dev->read_mutex);
-	mutex_destroy(&cxd224x_dev->lock);
-	if (cxd224x_dev->kbuf)
-		kfree(cxd224x_dev->kbuf);
-err_alloc_kbuf:
 	kfree(cxd224x_dev);
 err_exit:
 	if(irq_gpio_ok)
@@ -820,7 +801,6 @@ static int cxd224x_remove(struct i2c_client *client)
 	free_irq(client->irq, cxd224x_dev);
 	misc_deregister(&cxd224x_dev->cxd224x_device);
 	mutex_destroy(&cxd224x_dev->read_mutex);
-	mutex_destroy(&cxd224x_dev->lock);
 	gpio_free(cxd224x_dev->irq_gpio);
 #if defined(CONFIG_NFC_CXD224X_VEN) || defined(CONFIG_NFC_CXD224X_VEN_MODULE)
 	gpio_free(cxd224x_dev->en_gpio);
@@ -829,7 +809,7 @@ static int cxd224x_remove(struct i2c_client *client)
 #if defined(CONFIG_NFC_CXD224X_RST) || defined(CONFIG_NFC_CXD224X_RST_MODULE)
 	cxd224x_dev_data = NULL;
 #endif
-	kfree(cxd224x_dev->kbuf);
+
 	kfree(cxd224x_dev);
 
 	NFC_DRV_DBG_LOG("END");

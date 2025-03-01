@@ -44,18 +44,9 @@
 #include "nfc.h"
 #include "snfc_en.h"
 
-//SHARP_EXTEND [NFC/Felica] for QD93R#66 ADD_START
-#ifdef CONFIG_SHARP_BOOT
-#include <soc/qcom/sharp/sh_boot_manager.h>
-#define SH_BOOT_MODE_DIAG                0x40
-#define SH_BOOT_MODE_FORCE_FUNC           0x44
-#endif /* CONFIG_SHARP_BOOT */
-//SHARP_EXTEND [NFC/Felica] for QD93R#66 ADD_END
-
 /* MACROS */
 #define D_SNFC_EN_DEVS 			(1)
 #define D_SNFC_EN_DEV_NAME 		("snfc_en")
-#define D_SNFC_EN_CHIP_RESET    ( 1 )
 
 /* VARIABLES */
 struct snfc_en_platform_data {
@@ -74,8 +65,6 @@ struct snfc_en_info {
 };
 
 static struct device *snfc_en_dev = NULL;
-static int    ChipResetFlg        = 0;
-static int    acquire_nfc         = 0;
 
 /* FUNCTION */
 
@@ -129,13 +118,6 @@ static long snfc_en_ioctl(struct file *file, unsigned int cmd, unsigned long arg
 			NFC_DRV_ERR_LOG("copy failed to user");
 		}
 		break;
-	case NFC_SNFC_IOCTL_GET_FLAG:
-		NFC_DRV_DBG_LOG("get flag");
-		ret = ChipResetFlg;
-		if(copy_to_user((unsigned int *)arg, &ret, sizeof(unsigned int)) != 0) {
-			NFC_DRV_ERR_LOG("copy failed to user");
-		}
-		break;
 #ifdef DEBUG_NFC_DRV_PIN
 	case NFC_SNFC_IOCTL_GET_CLKREQ:
 		NFC_DRV_DBG_LOG("get clk_req");
@@ -169,11 +151,6 @@ ssize_t snfc_en_write(struct file *file, const char __user *data, size_t len, lo
 {
 	char sw;
 	ssize_t ret = len;
-//SHARP_EXTEND [NFC/Felica] for QD93R#66 ADD_START
-#ifdef CONFIG_SHARP_BOOT
-    unsigned long sh_boot_mode = 0;
-#endif /* CONFIG_SHARP_BOOT */
-//SHARP_EXTEND [NFC/Felica] for QD93R#66 ADD_END
 
 	NFC_DRV_DBG_LOG("START");
 
@@ -196,35 +173,12 @@ ssize_t snfc_en_write(struct file *file, const char __user *data, size_t len, lo
 		NFC_DRV_DBG_LOG("on sequence");
 #if defined(CONFIG_NFC_CXD224X_RST) || defined(CONFIG_NFC_CXD224X_RST_MODULE)
 #ifndef CONFIG_NFC_CXD224X_PROBE_RST
-//SHARP_EXTEND [NFC/Felica] for QD93R#66 MOD_START
-#ifdef CONFIG_SHARP_BOOT
-    sh_boot_mode = sh_boot_get_bootmode();
-    NFC_DRV_DBG_LOG("sh_boot_mode = %10lu", sh_boot_mode);
-    if(sh_boot_mode != SH_BOOT_MODE_DIAG && sh_boot_mode != SH_BOOT_MODE_FORCE_FUNC){
-#endif /* CONFIG_SHARP_BOOT */
-        cxd224x_dev_reset();
-        NFC_DRV_DBG_LOG("cxd224x_dev_reset END");
-        ChipResetFlg = D_SNFC_EN_CHIP_RESET;
-#ifdef CONFIG_SHARP_BOOT
-    }
-#endif /* CONFIG_SHARP_BOOT */
-//SHARP_EXTEND [NFC/Felica] for QD93R#66 MOD_END
+		cxd224x_dev_reset();
 #endif
 #endif
 		break;
 	case SNFC_OFF_SEQUENCE_SIM:
 		NFC_DRV_DBG_LOG("off sequence_sim");
-		break;
-	case SNFC_ACQUIRE_NFC_SERVICE:
-	case SNFC_ACQUIRE_NFC_DAEMON:
-		NFC_DRV_DBG_LOG("acquire nfc = %d", sw);
-		if ( acquire_nfc != 0 ) {
-			if ( acquire_nfc != sw ) {
-				NFC_DRV_DBG_LOG("acquire nfc error!");
-				return -EFAULT;
-			}
-		}
-		acquire_nfc = sw;
 		break;
 	default:
 		NFC_DRV_ERR_LOG("write data = %d", sw);

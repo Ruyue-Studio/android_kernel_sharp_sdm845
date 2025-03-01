@@ -18,8 +18,6 @@
 #define SNFC_OFF_SEQUENCE_NFC 0
 #define SNFC_ON_SEQUENCE      1
 #define SNFC_OFF_SEQUENCE_SIM 2
-#define SNFC_ACQUIRE_NFC_SERVICE 3
-#define SNFC_ACQUIRE_NFC_DAEMON  4
 
 #define NFC_SNFC_EN_IOC_MAGIC 'd'
 #define NFC_SNFC_EN_IOCTL_HVDD_H        _IO  ( NFC_SNFC_EN_IOC_MAGIC, 0x01)
@@ -27,6 +25,5 @@
 #define NFC_SNFC_IOCTL_GET_NINT         _IOR ( NFC_SNFC_EN_IOC_MAGIC, 0x03, unsigned int)
 #define NFC_SNFC_IOCTL_GET_STATUS       _IOR ( NFC_SNFC_EN_IOC_MAGIC, 0x04, unsigned int)
 #define NFC_SNFC_IOCTL_GET_CLKREQ       _IOR ( NFC_SNFC_EN_IOC_MAGIC, 0x05, unsigned int)
-#define NFC_SNFC_IOCTL_GET_FLAG         _IOR ( NFC_SNFC_EN_IOC_MAGIC, 0x06, unsigned int)
 #endif /* _LINUX_SNFC_EN_H */
 
