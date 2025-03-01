@@ -126,6 +126,8 @@ struct mdss_pp_res_type_v1_7 {
 	struct mdp_hist_lut_data_v1_7 hist_lut_v17_data[MDSS_BLOCK_DISP_NUM];
 	struct mdp_dither_data_v1_7 dither_v17_data[MDSS_BLOCK_DISP_NUM];
 	struct mdp_gamut_data_v1_7 gamut_v17_data[MDSS_BLOCK_DISP_NUM];
+	struct mdp_pcc_data_v1_7 kernel_pcc_v17_data[MDSS_BLOCK_DISP_NUM];
+	struct mdp_pcc_data_v1_7 user_pcc_v17_data[MDSS_BLOCK_DISP_NUM];
 	struct mdp_pcc_data_v1_7 pcc_v17_data[MDSS_BLOCK_DISP_NUM];
 	struct mdp_pa_data_v1_7 pa_v17_data[MDSS_BLOCK_DISP_NUM];
 };
@@ -158,6 +160,8 @@ struct mdss_pp_res_type {
 	struct pp_sts_type pp_disp_sts[MDSS_BLOCK_DISP_NUM];
 	/* physical info */
 	struct pp_hist_col_info *dspp_hist;
+	struct mdp_pcc_cfg_data kernel_pcc_disp_cfg[MDSS_BLOCK_DISP_NUM];
+	struct mdp_pcc_cfg_data user_pcc_disp_cfg[MDSS_BLOCK_DISP_NUM];
 	/*
 	 * The pp_data_v1_7 will be a pointer to newer MDP revisions of the
 	 * pp_res, which will hold the cfg_payloads of each feature in a single
