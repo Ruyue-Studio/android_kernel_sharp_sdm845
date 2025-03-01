@@ -7,7 +7,7 @@ ifeq ($(TARGET_BUILD_VARIANT),eng)
 endif
 
 ifeq ($(CONFIG_SHARP_TPS_SY3X00_DEV),y)
-	obj-m += shtps.o
+	obj-y += shtps.o
 
 	shtps-y	+= 	shtps_spi.o				\
 				shtps_i2c.o				\

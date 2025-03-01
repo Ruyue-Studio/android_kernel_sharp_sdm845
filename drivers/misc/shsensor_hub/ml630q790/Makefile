@@ -6,7 +6,7 @@ EXTRA_CFLAGS += -DSHUB_SW_FACTORY_MODE
 endif
 
 ifeq ($(CONFIG_SHUB_ML630Q790), y)
-obj-m += ml630q790_lib.o
+obj-y += ml630q790_lib.o
 
 ml630q790_lib-y := ml630q790.o \
                    shub-batching.o \
