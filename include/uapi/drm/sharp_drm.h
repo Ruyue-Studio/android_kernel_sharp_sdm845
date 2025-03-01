@@ -41,25 +41,23 @@
 #define DRM_GMMVOLT_REQ_ADJUST          (1)
 #define DRM_GMMVOLT_REQ_UNADJUST        (2)
 
-#define DRM_BASE_FPS_30                 (120)
-#define DRM_BASE_FPS_60                 (120)
-#define DRM_BASE_FPS_100                (120)
+#define DRM_BASE_FPS_30                 (30)
+#define DRM_BASE_FPS_60                 (60)
+#define DRM_BASE_FPS_100                (100)
 #define DRM_BASE_FPS_120                (120)
 
-#if defined(CONFIG_ARCH_DIO) || defined(FEATURE_SH_DISPLAY_MODEL_DIO)
+#if defined(CONFIG_ARCH_DIO)
     #define DRM_BASE_FPS_DEFAULT        DRM_BASE_FPS_120
     #define DRM_BASE_MAX_FPS            DRM_BASE_FPS_120
-#elif defined(CONFIG_ARCH_JOHNNY) || defined(FEATURE_SH_DISPLAY_MODEL_JOHNNY)
+#elif defined(CONFIG_ARCH_JOHNNY)
     #define DRM_BASE_FPS_DEFAULT        DRM_BASE_FPS_120
     #define DRM_BASE_MAX_FPS            DRM_BASE_FPS_120
-#elif defined(CONFIG_ARCH_PUCCI) || defined(FEATURE_SH_DISPLAY_MODEL_PUCCI)
+#elif defined(CONFIG_ARCH_PUCCI)
     #define DRM_BASE_FPS_DEFAULT        DRM_BASE_FPS_120
     #define DRM_BASE_MAX_FPS            DRM_BASE_FPS_120
 #else
     #define DRM_BASE_FPS_DEFAULT        DRM_BASE_FPS_120
 #endif
-
-#define DRM_BASE_MAX_FPS                DRM_BASE_FPS_DEFAULT
 
 enum {
     MDP_INTERNAL_OSC_TYPE_A,
